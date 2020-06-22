@@ -5,9 +5,11 @@ import (
 	"net/http"
   "strings"
   "os/exec"
+  "os"
   "fmt"
 
 	"github.com/gorilla/mux"
+  "github.com/joho/godotenv"
 )
 
 type Feed struct {
@@ -19,11 +21,17 @@ type Feed struct {
 var feeds []*Feed
 
 func main() {
+  if godotenv.Load("config.env") != nil {
+    log.Fatal("Failed to get configuration while loading port number!")
+  }
+
+  port := os.Getenv("DB_USER")
+
   r := mux.NewRouter()
 
   r.HandleFunc("/add/", addFeed)
   r.PathPrefix("/stream/").Handler(http.StripPrefix("/stream/", new(StreamServer)))
-  log.Fatal(http.ListenAndServe(":8000", r))
+  log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", port), r))
 }
 
 func addFeed(w http.ResponseWriter, r *http.Request) {
