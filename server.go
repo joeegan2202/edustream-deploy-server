@@ -25,7 +25,7 @@ func main() {
     log.Fatal("Failed to get configuration while loading port number!")
   }
 
-  port := os.Getenv("DB_USER")
+  port := os.Getenv("PORT")
 
   r := mux.NewRouter()
 
