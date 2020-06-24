@@ -30,7 +30,6 @@ func main() {
   r := mux.NewRouter()
 
   r.HandleFunc("/add/", addFeed)
-  r.PathPrefix("/stream/").Handler(http.StripPrefix("/stream/", new(StreamServer)))
   log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", port), r))
 }
 
@@ -73,29 +72,4 @@ func addFeed(w http.ResponseWriter, r *http.Request) {
 
   w.WriteHeader(http.StatusOK)
   w.Write([]byte("true;"))
-}
-
-type StreamServer struct {}
-
-func (s *StreamServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-  w.Header().Set("Access-Control-Allow-Origin", "*")
-
-  //ip := r.Header.Get("X-FORWARDED-FOR")
-  //if ip != "18.222.231.117" && r.RemoteAddr != "18.222.231.117" {
-  //  w.WriteHeader(http.StatusUnauthorized)
-  //  w.Write([]byte("false;Wrong IP to get stream"))
-  //  return
-  //}
-
-  id := strings.Split(r.URL.Path, "/")[0]
-
-  for _, f := range feeds {
-    if f.id == id {
-      http.StripPrefix(id, http.FileServer(http.Dir(fmt.Sprintf("./streams/%s", id)))).ServeHTTP(w, r)
-      return
-    }
-  }
-
-  w.WriteHeader(http.StatusBadRequest)
-  w.Write([]byte(`{"status": false, "err": "No session for stream found"}`))
 }

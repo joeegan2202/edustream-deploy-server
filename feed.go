@@ -2,10 +2,8 @@ package main
 
 import (
 	"fmt"
-	"os"
 	"os/exec"
 	"runtime"
-	"syscall"
 )
 
 func (f *Feed) initiateStream() error {
@@ -19,9 +17,6 @@ func (f *Feed) initiateStream() error {
     path, err = exec.Command("/usr/bin/which", "ffmpeg").Output()
   }
 
-  syscall.Umask(0)
-  os.Mkdir(fmt.Sprintf("streams/%s", f.id), 0755)
-
   if err != nil {
     return fmt.Errorf("Could not find ffmpeg binary/executable! Error: %s", err.Error())
   }
@@ -29,7 +24,7 @@ func (f *Feed) initiateStream() error {
   streamCommand += string(path[0:len(path)-1])
   fmt.Printf("Path found: %s\n", streamCommand)
 
-  f.streamCmd = exec.Command(streamCommand, "-i", f.address, "-hls_time", "3", "-hls_wrap", "10", "-codec", "copy", fmt.Sprintf("streams/%s/stream.m3u8", f.id))
+  f.streamCmd = exec.Command(streamCommand, "-i", f.address, "-hls_time", "3", "-hls_list_size", "20", "-hls_wrap", "20", "-codec", "copy", "-method", "PUT", fmt.Sprintf("https://api.edustream.live/ingest/%s/stream.m3u8", f.id))
   fmt.Println(f.streamCmd.String())
   go func() {
     f.streamCmd.Run()
