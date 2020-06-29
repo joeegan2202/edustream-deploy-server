@@ -54,6 +54,8 @@ func addFeed(w http.ResponseWriter, r *http.Request) {
   id := query["id"][0]
   address := query["address"][0]
 
+  fmt.Printf("Starting stream with ID: %s, and address: %s\n", id, address)
+
   for _, f := range feeds {
     if f.id == id {
       w.WriteHeader(http.StatusOK)
@@ -66,7 +68,9 @@ func addFeed(w http.ResponseWriter, r *http.Request) {
   newFeed.id = strings.ReplaceAll(id, "\"", "\\\"")
   newFeed.address = strings.ReplaceAll(address, "\"", "\\\"")
 
-  newFeed.initiateStream()
+  if err := newFeed.initiateStream(); err != nil {
+    fmt.Println(err.Error())
+  }
 
   feeds = append(feeds, newFeed)
 
