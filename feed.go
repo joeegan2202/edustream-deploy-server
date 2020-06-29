@@ -11,10 +11,10 @@ func (f *Feed) initiateStream() error {
   // Change with OS:
   var path []byte
   var err error
-  if runtime.GOOS == "windows" {
-    path, err = exec.Command("where ffmpeg").Output()
-  } else {
+  if runtime.GOOS != "windows" {
     path, err = exec.Command("/usr/bin/which", "ffmpeg").Output()
+  } else {
+    path = []byte("ffmpeg\n")
   }
 
   if err != nil {
