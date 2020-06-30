@@ -2,10 +2,8 @@ package main
 
 import (
 	"fmt"
-	"os"
 	"os/exec"
 	"runtime"
-	"syscall"
 )
 
 func (f *Feed) initiateStream() error {
@@ -13,14 +11,11 @@ func (f *Feed) initiateStream() error {
   // Change with OS:
   var path []byte
   var err error
-  if runtime.GOOS == "windows" {
-    path, err = exec.Command("where ffmpeg").Output()
-  } else {
+  if runtime.GOOS != "windows" {
     path, err = exec.Command("/usr/bin/which", "ffmpeg").Output()
+  } else {
+    path = []byte("ffmpeg\n")
   }
-
-  syscall.Umask(0)
-  os.Mkdir(fmt.Sprintf("streams/%s", f.id), 0755)
 
   if err != nil {
     return fmt.Errorf("Could not find ffmpeg binary/executable! Error: %s", err.Error())
@@ -29,7 +24,7 @@ func (f *Feed) initiateStream() error {
   streamCommand += string(path[0:len(path)-1])
   fmt.Printf("Path found: %s\n", streamCommand)
 
-  f.streamCmd = exec.Command(streamCommand, "-i", f.address, "-hls_time", "3", "-hls_wrap", "10", "-codec", "copy", fmt.Sprintf("streams/%s/stream.m3u8", f.id))
+  f.streamCmd = exec.Command(streamCommand, "-i", f.address, "-hls_time", "15", "-hls_list_size", "20", "-hls_wrap", "20", "-codec", "copy", "-method", "PUT", fmt.Sprintf("https://api.edustream.live/ingest/%s/stream.m3u8", f.id))
   fmt.Println(f.streamCmd.String())
   go func() {
     f.streamCmd.Run()
@@ -45,6 +40,7 @@ func (f *Feed) initiateStream() error {
     }
     feeds[len(feeds)-1], feeds[index] = feeds[index], feeds[len(feeds)-1]
     feeds = feeds[:len(feeds)-1] // Magic code to delete this feed from the list of feeds
+    fmt.Printf("Stream is stopping: %s\n", f.streamCmd.String())
   }()
 
   return nil
