@@ -1,3 +1,4 @@
 streams/*
 config.env
 edustream-deploy-server
+key.pem
