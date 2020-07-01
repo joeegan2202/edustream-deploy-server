@@ -1,9 +1,12 @@
 package main
 
 import (
+	"bytes"
+	"crypto"
+  "crypto/rand"
 	"crypto/rsa"
 	"crypto/sha256"
-  "crypto/x509"
+	"crypto/x509"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -39,7 +42,7 @@ func main() {
   r := mux.NewRouter()
 
   r.HandleFunc("/add/", addFeed)
-  r.HandleFunc("/ingest/", signStream)
+  r.PathPrefix("/ingest/").Handler(http.StripPrefix("/ingest/", new(IngestServer))) // The actual file server for streams
   log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", port), r))
 }
 
@@ -104,7 +107,9 @@ func addFeed(w http.ResponseWriter, r *http.Request) {
   w.Write([]byte("true;"))
 }
 
-func signStream(w http.ResponseWriter, r *http.Request) {
+type IngestServer struct {}
+
+func (i *IngestServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
   chunk := make([]byte, 2048)
   _, err := io.ReadFull(r.Body, chunk)
 
@@ -113,7 +118,27 @@ func signStream(w http.ResponseWriter, r *http.Request) {
     return
   }
 
+  fmt.Println(r.URL.RawPath)
+
   hasher := sha256.New()
 
   hasher.Write(chunk)
+
+  signature, err := rsa.SignPKCS1v15(rand.Reader, key, crypto.SHA256, hasher.Sum(nil))
+
+  if err != nil {
+    fmt.Printf("Error trying to sign data chunk! %s\n", err.Error())
+    return
+  }
+
+  client := new(http.Client)
+
+  req, err := http.NewRequest(http.MethodPut, fmt.Sprintf("https://api.edustream.live/%s?signature=%x", r.URL.RawPath, signature), io.MultiReader(bytes.NewReader(chunk), r.Body))
+
+  if err != nil {
+    fmt.Printf("Error trying to create ingest request! %s\n", err.Error())
+    return
+  }
+
+  client.Do(req)
 }
