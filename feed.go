@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"os/exec"
 	"runtime"
 )
@@ -24,7 +25,7 @@ func (f *Feed) initiateStream() error {
   streamCommand += string(path[0:len(path)-1])
   fmt.Printf("Path found: %s\n", streamCommand)
 
-  f.streamCmd = exec.Command(streamCommand, "-i", f.address, "-hls_time", "15", "-hls_list_size", "20", "-hls_wrap", "20", "-codec", "copy", "-method", "PUT", fmt.Sprintf("https://api.edustream.live/ingest/%s/stream.m3u8", f.id))
+  f.streamCmd = exec.Command(streamCommand, "-i", f.address, "-hls_time", "15", "-hls_list_size", "20", "-hls_wrap", "20", "-codec", "copy", "-method", "PUT", fmt.Sprintf("http://127.0.0.1:%s/ingest/%s/stream.m3u8", os.Getenv("PORT"), f.id))
   fmt.Println(f.streamCmd.String())
   go func() {
     f.streamCmd.Run()
