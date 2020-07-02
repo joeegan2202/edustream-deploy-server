@@ -118,7 +118,7 @@ func (i *IngestServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
     return
   }
 
-  fmt.Println(r.URL.RawPath)
+  fmt.Println(r.URL.Path)
 
   hasher := sha256.New()
 
@@ -133,7 +133,7 @@ func (i *IngestServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
   client := new(http.Client)
 
-  req, err := http.NewRequest(http.MethodPut, fmt.Sprintf("https://api.edustream.live/%s?signature=%x", r.URL.RawPath, signature), io.MultiReader(bytes.NewReader(chunk), r.Body))
+  req, err := http.NewRequest(http.MethodPut, fmt.Sprintf("https://api.edustream.live/%s?signature=%x", r.URL.Path, signature), io.MultiReader(bytes.NewReader(chunk), r.Body))
 
   if err != nil {
     fmt.Printf("Error trying to create ingest request! %s\n", err.Error())
