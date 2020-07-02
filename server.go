@@ -111,7 +111,7 @@ type IngestServer struct {}
 
 func (i *IngestServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
   chunk := make([]byte, 2048)
-  _, err := io.ReadFull(r.Body, chunk)
+  _, err := io.ReadAtLeast(r.Body, chunk, 100)
 
   if err != nil {
     fmt.Printf("Error while trying to read chunk of body data! %s\n", err.Error())
