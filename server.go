@@ -140,5 +140,12 @@ func (i *IngestServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
     return
   }
 
-  client.Do(req)
+  res, err := client.Do(req)
+
+  if err != nil {
+    log.Printf("Error sending request! %s\n", err.Error())
+    return
+  }
+
+  fmt.Println(ioutil.ReadAll(res.Body))
 }
