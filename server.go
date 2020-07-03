@@ -148,5 +148,5 @@ func (i *IngestServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
   }
 
   data, err := ioutil.ReadAll(res.Body)
-  fmt.Printf("Response received: %x\n", data)
+  fmt.Printf("Response received: %s\n", string(data))
 }
