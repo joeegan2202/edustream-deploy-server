@@ -42,6 +42,7 @@ func (f *Feed) initiateStream() error {
     feeds[len(feeds)-1], feeds[index] = feeds[index], feeds[len(feeds)-1]
     feeds = feeds[:len(feeds)-1] // Magic code to delete this feed from the list of feeds
     fmt.Printf("Stream is stopping: %s\n", f.streamCmd.String())
+    sendStatus(f.id, 0)
   }()
 
   return nil
