@@ -113,7 +113,7 @@ func (i *IngestServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
   chunk := make([]byte, 2048)
   bytesRead, err := io.ReadAtLeast(r.Body, chunk, 100)
 
-  chunk = chunk[:bytesRead]
+  log.Println(bytesRead)
 
   if err != nil {
     fmt.Printf("Error while trying to read chunk of body data! %s\n", err.Error())
@@ -124,7 +124,7 @@ func (i *IngestServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
   hasher := sha256.New()
 
-  hasher.Write(chunk)
+  hasher.Write(chunk[:bytesRead])
 
   signature, err := rsa.SignPKCS1v15(rand.Reader, key, crypto.SHA256, hasher.Sum(nil))
 
@@ -135,7 +135,7 @@ func (i *IngestServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
   client := new(http.Client)
 
-  req, err := http.NewRequest(http.MethodPut, fmt.Sprintf("https://api.edustream.live/ingest/%s?signature=%x", r.URL.Path, signature), io.MultiReader(bytes.NewReader(chunk), r.Body))
+  req, err := http.NewRequest(http.MethodPut, fmt.Sprintf("https://api.edustream.live/ingest/%s?signature=%x", r.URL.Path, signature), io.MultiReader(bytes.NewReader(chunk[:bytesRead]), r.Body))
 
   if err != nil {
     fmt.Printf("Error trying to create ingest request! %s\n", err.Error())
