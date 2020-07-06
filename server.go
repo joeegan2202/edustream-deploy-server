@@ -43,6 +43,7 @@ func main() {
   r := mux.NewRouter()
 
   r.HandleFunc("/add/", addFeed)
+  r.HandleFunc("/stop/", stopFeed)
   r.PathPrefix("/ingest/").Handler(http.StripPrefix("/ingest/", new(IngestServer))) // The actual file server for streams
   log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", port), r))
 }
@@ -109,6 +110,34 @@ func addFeed(w http.ResponseWriter, r *http.Request) {
   w.Write([]byte("true;"))
 
   sendStatus(id, 1)
+}
+
+func stopFeed(w http.ResponseWriter, r *http.Request) {
+  w.Header().Set("Access-Control-Allow-Origin", "*")
+
+  query := r.URL.Query()
+
+  if query["id"] == nil {
+    w.WriteHeader(http.StatusBadRequest)
+    w.Write([]byte("false;Incorrect parameters to stop feed"))
+    return
+  }
+
+  id := query["id"][0]
+
+  fmt.Printf("Stopping feed with ID: %s\n", id)
+
+  for _, f := range feeds {
+    if f.id == id {
+      f.streamCmd.Process.Kill()
+      w.WriteHeader(http.StatusOK)
+      w.Write([]byte("true;Feed stopped"))
+      return
+    }
+  }
+
+  w.WriteHeader(http.StatusInternalServerError)
+  w.Write([]byte("No feed found with id!"))
 }
 
 type IngestServer struct {}
