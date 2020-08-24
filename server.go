@@ -15,7 +15,6 @@ import (
 	"os"
 	"os/exec"
 	"strings"
-	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
@@ -110,8 +109,6 @@ func addFeed(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("true;"))
-
-	sendStatus(id, 1)
 }
 
 func stopFeed(w http.ResponseWriter, r *http.Request) {
@@ -186,38 +183,4 @@ func (i *IngestServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	data, err := ioutil.ReadAll(res.Body)
 	fmt.Printf("Response received from %s: %s\n", req.URL.RequestURI(), string(data))
-}
-
-func sendStatus(cameraId string, status int8) {
-	hasher := sha256.New()
-
-	now := time.Now().Format(time.RFC3339Nano)
-
-	hasher.Write([]byte(now))
-
-	signature, err := rsa.SignPKCS1v15(rand.Reader, key, crypto.SHA256, hasher.Sum(nil))
-
-	if err != nil {
-		log.Printf("Error signing timestamp! %s\n", err.Error())
-		return
-	}
-
-	req, err := http.NewRequest("GET", fmt.Sprintf("https://api.edustream.live/status/?signature=%x&cameraId=%s&status=%d", signature, cameraId, status), strings.NewReader(now))
-
-	if err != nil {
-		log.Printf("Error creating request! %s\n", err.Error())
-		return
-	}
-
-	client := new(http.Client)
-
-	res, err := client.Do(req)
-
-	if err != nil {
-		log.Printf("Error sending request! %s\n", err.Error())
-		return
-	}
-
-	data, _ := ioutil.ReadAll(res.Body)
-	log.Printf("Response returned: %s\n", string(data))
 }
