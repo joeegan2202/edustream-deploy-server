@@ -185,7 +185,7 @@ func (i *IngestServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data, err := ioutil.ReadAll(res.Body)
-	fmt.Printf("Response received: %s\n", string(data))
+	fmt.Printf("Response received from %s: %s\n", req.URL.RequestURI(), string(data))
 }
 
 func sendStatus(cameraId string, status int8) {
